@@ -90,6 +90,17 @@ const config = [
 
 ];
 
+const mode = {
+    allowRoles: [
+        '1532030424690462932', // Dynamics
+        '1532030780971155496', // Electronics
+        '1532030669461389442', // Electromagnets
+        '1532030584564744213', // Power
+        '1532030527660626130', // Software
+        '1532030964774080603'  // Static
+    ]
+};
+
 // Initialize the ReactionRole system
 const rr = new ReactionRole(client, config);
 // Log in to Discord with the token from your .env file
