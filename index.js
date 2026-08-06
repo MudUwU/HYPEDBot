@@ -47,7 +47,7 @@ client.on(Events.InteractionCreate, async interaction => {
 });
 
 // REACTION ROLES
-import { ReactionRole } from 'discordjs-reaction-role';
+
 
 // Define your reaction role rules in an array
 const config = [
