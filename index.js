@@ -70,6 +70,9 @@ const exclusiveRoles = [
     '1532030964774080603'  // Static
 ];
 
+// The base role that everyone gets
+const BASE_ROLE_ID = '1534912570262028308';
+
 // The message ID where reactions will be used
 const MESSAGE_ID = '1534554590022860870';
 
@@ -124,6 +127,12 @@ client.on('messageReactionAdd', async (reaction, user) => {
         return;
     }
 
+    const baseRole = guild.roles.cache.get(BASE_ROLE_ID);
+    if (!baseRole) {
+        console.error(`Base role ${BASE_ROLE_ID} not found`);
+        return;
+    }
+
     // Check if user already has this role
     if (member.roles.cache.has(roleId)) {
         console.log(`${user.tag} already has ${role.name}`);
@@ -140,9 +149,15 @@ client.on('messageReactionAdd', async (reaction, user) => {
             }
         }
 
-        // Add the new role
+        // Add the specific role
         await member.roles.add(role);
         console.log(`✅ Gave ${user.tag} the ${role.name} role`);
+
+        // Add the base role (if they don't already have it)
+        if (!member.roles.cache.has(BASE_ROLE_ID)) {
+            await member.roles.add(baseRole);
+            console.log(`✅ Gave ${user.tag} the ${baseRole.name} role`);
+        }
     } catch (error) {
         console.error(`Error managing roles for ${user.tag}:`, error);
     }
@@ -198,10 +213,31 @@ client.on('messageReactionRemove', async (reaction, user) => {
         return;
     }
 
+    const baseRole = guild.roles.cache.get(BASE_ROLE_ID);
+    if (!baseRole) {
+        console.error(`Base role ${BASE_ROLE_ID} not found`);
+        return;
+    }
+
     try {
-        // Remove the role
+        // Remove the specific role
         await member.roles.remove(role);
         console.log(`✅ Removed ${role.name} from ${user.tag}`);
+
+        // Check if user has any other exclusive role
+        let hasOtherExclusiveRole = false;
+        for (const otherRoleId of exclusiveRoles) {
+            if (member.roles.cache.has(otherRoleId)) {
+                hasOtherExclusiveRole = true;
+                break;
+            }
+        }
+
+        // If they have no other exclusive roles, remove the base role too
+        if (!hasOtherExclusiveRole) {
+            await member.roles.remove(baseRole);
+            console.log(`✅ Removed ${baseRole.name} from ${user.tag} (no exclusive roles left)`);
+        }
     } catch (error) {
         console.error(`Error removing role from ${user.tag}:`, error);
     }
