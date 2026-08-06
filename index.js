@@ -1,5 +1,6 @@
 // Import dependencies
-import { Client, GatewayIntentBits, Events } from "discord.js";
+import { Client, GatewayIntentBits, Events, Partials } from "discord.js";
+import { ReactionRole } from 'discordjs-reaction-role';
 import express from "express";
 import 'dotenv/config'; // Load environment variables
 
@@ -8,7 +9,13 @@ const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent // Needed to read message content
+        GatewayIntentBits.GuildMessageReactions, 
+        GatewayIntentBits.MessageContent 
+    ],
+    partials: [
+        Partials.Message,
+        Partials.Reaction,
+        Partials.User
     ]
 });
 
@@ -39,5 +46,51 @@ client.on(Events.InteractionCreate, async interaction => {
     }
 });
 
+// REACTION ROLES
+
+
+// Define your reaction role rules in an array
+const config = [
+    // Dynamics
+    {
+        messageId: '1534554590022860870', 
+        reaction: '🚂',
+        roleId: '1532030424690462932'
+    },
+        // Electronics
+    {
+        messageId: '1534554590022860870', // You can have multiple reactions on the same message
+        reaction: '📡',
+        roleId: '1532030780971155496'
+    },
+        // Electromagnets
+    {
+        messageId: '1534554590022860870', // You can have multiple reactions on the same message
+        reaction: '🧲',
+        roleId: '1532030669461389442'
+    },
+        //Power
+    {
+        messageId: '1534554590022860870', // You can have multiple reactions on the same message
+        reaction: '⚡',
+        roleId: '1532030584564744213'
+    },
+        // Software
+    {
+        messageId: '1534554590022860870', // You can have multiple reactions on the same message
+        reaction: '<:ferris:1532084395320807595>',
+        roleId: '1532030527660626130'
+    },
+    //Static
+    {
+        messageId: '1534554590022860870', // You can have multiple reactions on the same message
+        reaction: '🛤️',
+        roleId: '1532030964774080603'
+    },
+
+];
+
+// Initialize the ReactionRole system
+const rr = new ReactionRole(client, config);
 // Log in to Discord with the token from your .env file
 client.login(process.env.TOKEN);
