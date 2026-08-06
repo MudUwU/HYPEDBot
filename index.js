@@ -1,5 +1,5 @@
 // Import dependencies
-import { Client, GatewayIntentBits, Events } from "discord.js";
+import { Client, GatewayIntentBits, Events, Partials } from "discord.js";
 import express from "express";
 import 'dotenv/config'; // Load environment variables
 
@@ -58,31 +58,31 @@ const config = [
     },
         // Electronics
     {
-        messageId: 'YOUR_MESSAGE_ID_1', // You can have multiple reactions on the same message
+        messageId: '1534554590022860870', // You can have multiple reactions on the same message
         reaction: '📡',
         roleId: '1532030780971155496'
     },
         // Electromagnets
     {
-        messageId: 'YOUR_MESSAGE_ID_1', // You can have multiple reactions on the same message
+        messageId: '1534554590022860870', // You can have multiple reactions on the same message
         reaction: '🧲',
         roleId: '1532030669461389442'
     },
         //Power
     {
-        messageId: 'YOUR_MESSAGE_ID_1', // You can have multiple reactions on the same message
+        messageId: '1534554590022860870', // You can have multiple reactions on the same message
         reaction: '⚡',
         roleId: '1532030584564744213'
     },
         // Software
     {
-        messageId: 'YOUR_MESSAGE_ID_1', // You can have multiple reactions on the same message
+        messageId: '1534554590022860870', // You can have multiple reactions on the same message
         reaction: '<:ferris:1532084395320807595>',
         roleId: '1532030527660626130'
     },
     //Static
     {
-        messageId: 'YOUR_MESSAGE_ID_1', // You can have multiple reactions on the same message
+        messageId: '1534554590022860870', // You can have multiple reactions on the same message
         reaction: '🛤️',
         roleId: '1532030964774080603'
     },
