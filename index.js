@@ -102,6 +102,6 @@ const mode = {
 };
 
 // Initialize the ReactionRole system
-const rr = new ReactionRole(client, config);
+const rr = new ReactionRole(client, config, [mode]);
 // Log in to Discord with the token from your .env file
 client.login(process.env.TOKEN);
