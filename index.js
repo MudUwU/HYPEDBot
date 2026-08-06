@@ -1,6 +1,5 @@
 // Import dependencies
 import { Client, GatewayIntentBits, Events, Partials } from "discord.js";
-import { ReactionRole } from 'discordjs-reaction-role';
 import express from "express";
 import 'dotenv/config'; // Load environment variables
 
@@ -47,9 +46,9 @@ client.on(Events.InteractionCreate, async interaction => {
     }
 });
 
-// REACTION ROLES
-
-// REACTION ROLES - MANUAL IMPLEMENTATION WITH EXCLUSIVE MODE
+// ============================================
+// REACTION ROLES - MANUAL IMPLEMENTATION
+// ============================================
 
 // Define your role mappings
 const roleConfig = {
@@ -57,9 +56,8 @@ const roleConfig = {
     '📡': '1532030780971155496',      // Electronics
     '🧲': '1532030669461389442',      // Electromagnets
     '⚡': '1532030584564744213',      // Power
-    '🛤️': '1532030964774080603',      // Static
-    // For custom emoji, use the full format: '<:name:id>'
-    '<:ferris:1532084395320807595>': '1532030527660626130'  // Software
+    '<:ferris:1532084395320807595>': '1532030527660626130', // Software
+    '🛤️': '1532030964774080603'      // Static
 };
 
 // List of all exclusive role IDs
@@ -209,7 +207,5 @@ client.on('messageReactionRemove', async (reaction, user) => {
     }
 });
 
-// Initialize the ReactionRole system
-const rr = new ReactionRole(client, config, [mode]);
 // Log in to Discord with the token from your .env file
 client.login(process.env.TOKEN);
