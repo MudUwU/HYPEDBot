@@ -76,6 +76,70 @@ const BASE_ROLE_ID = '1534912570262028308';
 // The message ID where reactions will be used
 const MESSAGE_ID = '1534554590022860870';
 
+// ============================================
+// QUEUE SYSTEM
+// ============================================
+
+// Queue to store pending reactions
+const reactionQueue = [];
+let isProcessing = false;
+
+// Helper function to add a reaction to the queue
+function addToQueue(reaction, user, isRemove = false) {
+    return new Promise((resolve, reject) => {
+        reactionQueue.push({
+            reaction,
+            user,
+            isRemove,
+            resolve,
+            reject,
+            timestamp: Date.now()
+        });
+        console.log(`📥 Queued ${isRemove ? 'removal' : 'addition'} for ${user.tag}`);
+        processQueue(); // Start processing if not already
+    });
+}
+
+// Main queue processor
+async function processQueue() {
+    // If already processing or queue is empty, stop
+    if (isProcessing || reactionQueue.length === 0) return;
+
+    isProcessing = true;
+    console.log(`🔄 Processing queue (${reactionQueue.length} items)`);
+
+    try {
+        // Get the next item from the queue
+        const item = reactionQueue.shift();
+        const { reaction, user, isRemove, resolve, reject } = item;
+
+        try {
+            // Process the reaction
+            if (isRemove) {
+                await handleReactionRemove(reaction, user);
+            } else {
+                await handleReactionAdd(reaction, user);
+            }
+            resolve();
+        } catch (error) {
+            console.error(`Error processing reaction for ${user.tag}:`, error);
+            reject(error);
+        }
+
+        // After processing, check if there are more items
+        // Small delay to prevent rate limiting
+        setTimeout(() => {
+            isProcessing = false;
+            processQueue(); // Process next item
+        }, 200); // 200ms delay between each reaction
+
+    } catch (error) {
+        console.error('Queue processing error:', error);
+        isProcessing = false;
+        processQueue(); // Try to continue
+    }
+}
+
 // Handle reaction additions
 client.on('messageReactionAdd', async (reaction, user) => {
     // Ignore bot's own reactions
