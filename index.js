@@ -1,5 +1,6 @@
 // Import dependencies
 import { Client, GatewayIntentBits, Events, Partials } from "discord.js";
+import { ReactionRole } from 'discordjs-reaction-role';
 import express from "express";
 import 'dotenv/config'; // Load environment variables
 
@@ -46,7 +47,7 @@ client.on(Events.InteractionCreate, async interaction => {
 });
 
 // REACTION ROLES
-const { ReactionRole } = require('discordjs-reaction-role');
+import { ReactionRole } from 'discordjs-reaction-role';
 
 // Define your reaction role rules in an array
 const config = [
