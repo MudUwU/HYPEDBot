@@ -307,5 +307,249 @@ client.on('messageReactionRemove', async (reaction, user) => {
     }
 });
 
+
+// ============================================
+// SECOND MESSAGE - NON-TECH ROLES
+// ============================================
+
+// Define role mappings for the second message
+const nonTechRoleConfig = {
+    '🌐': '1553783737068822700',      // Marketing
+    '💸': '1553783753288056973',      // Sponsorship
+    '🧪': '1536463945064390756',      // Research
+    '🧑‍🏫': '1553785466749460693'    // Outreach
+};
+
+// List of all exclusive non-tech role IDs
+const nonTechExclusiveRoles = [
+    '1553783737068822700', // Marketing
+    '1553783753288056973', // Sponsorship
+    '1536463945064390756', // Research
+    '1553785466749460693' // Outreach
+];
+
+// The base role for non-tech members
+const NON_TECH_BASE_ROLE_ID = '1532031060962185367';
+
+// The second message ID
+const NON_TECH_MESSAGE_ID = '1536784336194375680';
+
+// ============================================
+// NON-TECH QUEUE SYSTEM
+// ============================================
+
+const nonTechQueue = [];
+let isNonTechProcessing = false;
+
+function addToNonTechQueue(reaction, user, isRemove = false) {
+    return new Promise((resolve, reject) => {
+        nonTechQueue.push({
+            reaction,
+            user,
+            isRemove,
+            resolve,
+            reject,
+            timestamp: Date.now()
+        });
+        console.log(`📥 Queued non-tech ${isRemove ? 'removal' : 'addition'} for ${user.tag}`);
+        processNonTechQueue();
+    });
+}
+
+async function processNonTechQueue() {
+    if (isNonTechProcessing || nonTechQueue.length === 0) return;
+
+    isNonTechProcessing = true;
+    console.log(`🔄 Processing non-tech queue (${nonTechQueue.length} items)`);
+
+    try {
+        const item = nonTechQueue.shift();
+        const { reaction, user, isRemove, resolve, reject } = item;
+
+        try {
+            if (isRemove) {
+                await handleNonTechReactionRemove(reaction, user);
+            } else {
+                await handleNonTechReactionAdd(reaction, user);
+            }
+            resolve();
+        } catch (error) {
+            console.error(`Error processing non-tech reaction for ${user.tag}:`, error);
+            reject(error);
+        }
+
+        setTimeout(() => {
+            isNonTechProcessing = false;
+            processNonTechQueue();
+        }, 200);
+    } catch (error) {
+        console.error('Non-tech queue processing error:', error);
+        isNonTechProcessing = false;
+        processNonTechQueue();
+    }
+}
+
+// Handle non-tech reaction additions
+client.on('messageReactionAdd', async (reaction, user) => {
+    if (user.bot) return;
+
+    if (reaction.partial) {
+        try {
+            await reaction.fetch();
+        } catch (error) {
+            console.error('Error fetching reaction:', error);
+            return;
+        }
+    }
+
+    // Only handle the non-tech message
+    if (reaction.message.id !== NON_TECH_MESSAGE_ID) return;
+
+    await addToNonTechQueue(reaction, user, false);
+});
+
+// Handle non-tech reaction removals
+client.on('messageReactionRemove', async (reaction, user) => {
+    if (user.bot) return;
+
+    if (reaction.partial) {
+        try {
+            await reaction.fetch();
+        } catch (error) {
+            console.error('Error fetching reaction:', error);
+            return;
+        }
+    }
+
+    if (reaction.message.id !== NON_TECH_MESSAGE_ID) return;
+
+    await addToNonTechQueue(reaction, user, true);
+});
+
+// Core logic: add non-tech role
+async function handleNonTechReactionAdd(reaction, user) {
+    const emojiName = reaction.emoji.name;
+    const emojiId = reaction.emoji.id;
+
+    let roleId = nonTechRoleConfig[emojiName];
+
+    if (!roleId && emojiId) {
+        for (const [key, value] of Object.entries(nonTechRoleConfig)) {
+            if (key.includes(emojiId)) {
+                roleId = value;
+                break;
+            }
+        }
+    }
+
+    if (!roleId) return;
+
+    const guild = reaction.message.guild;
+    if (!guild) return;
+
+    const member = await guild.members.fetch(user.id);
+    if (!member) return;
+
+    const role = guild.roles.cache.get(roleId);
+    if (!role) {
+        console.error(`Non-tech role ${roleId} not found`);
+        return;
+    }
+
+    const baseRole = guild.roles.cache.get(NON_TECH_BASE_ROLE_ID);
+    if (!baseRole) {
+        console.error(`Non-tech base role ${NON_TECH_BASE_ROLE_ID} not found`);
+        return;
+    }
+
+    // Check if user already has this role
+    if (member.roles.cache.has(roleId)) {
+        console.log(`${user.tag} already has ${role.name}`);
+        return;
+    }
+
+    try {
+        // Remove all other exclusive non-tech roles
+        for (const otherRoleId of nonTechExclusiveRoles) {
+            if (otherRoleId !== roleId && member.roles.cache.has(otherRoleId)) {
+                const otherRole = guild.roles.cache.get(otherRoleId);
+                await member.roles.remove(otherRoleId);
+                console.log(`✅ Removed ${otherRole?.name || 'unknown'} from ${user.tag}`);
+            }
+        }
+
+        // Add the specific role
+        await member.roles.add(role);
+        console.log(`✅ Gave ${user.tag} the ${role.name} role`);
+
+        // Add the non-tech base role if not already present
+        if (!member.roles.cache.has(NON_TECH_BASE_ROLE_ID)) {
+            await member.roles.add(baseRole);
+            console.log(`✅ Gave ${user.tag} the ${baseRole.name} role`);
+        }
+    } catch (error) {
+        console.error(`Error managing non-tech roles for ${user.tag}:`, error);
+    }
+}
+
+// Core logic: remove non-tech role
+async function handleNonTechReactionRemove(reaction, user) {
+    const emojiName = reaction.emoji.name;
+    const emojiId = reaction.emoji.id;
+
+    let roleId = nonTechRoleConfig[emojiName];
+
+    if (!roleId && emojiId) {
+        for (const [key, value] of Object.entries(nonTechRoleConfig)) {
+            if (key.includes(emojiId)) {
+                roleId = value;
+                break;
+            }
+        }
+    }
+
+    if (!roleId) return;
+
+    const guild = reaction.message.guild;
+    if (!guild) return;
+
+    const member = await guild.members.fetch(user.id);
+    if (!member) return;
+
+    const role = guild.roles.cache.get(roleId);
+    if (!role) {
+        console.error(`Non-tech role ${roleId} not found`);
+        return;
+    }
+
+    const baseRole = guild.roles.cache.get(NON_TECH_BASE_ROLE_ID);
+    if (!baseRole) {
+        console.error(`Non-tech base role ${NON_TECH_BASE_ROLE_ID} not found`);
+        return;
+    }
+
+    try {
+        // Remove the specific role
+        await member.roles.remove(role);
+        console.log(`✅ Removed ${role.name} from ${user.tag}`);
+
+        // Check if user still has any other exclusive non-tech role
+        let hasOtherExclusiveRole = false;
+        for (const otherRoleId of nonTechExclusiveRoles) {
+            if (member.roles.cache.has(otherRoleId)) {
+                hasOtherExclusiveRole = true;
+                break;
+            }
+        }
+
+        // If no other exclusive roles, remove the base role too
+        if (!hasOtherExclusiveRole) {
+            await member.roles.remove(baseRole);
+            console.log(`✅ Removed ${baseRole.name} from ${user.tag} (no exclusive roles left)`);
+        }
+    } catch (error) {
+        console.error(`Error removing non-tech role from ${user.tag}:`, error);
+    }
+}
 // Log in to Discord with the token from your .env file
 client.login(process.env.TOKEN);
