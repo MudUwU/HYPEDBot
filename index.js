@@ -76,6 +76,9 @@ const BASE_ROLE_ID = '1534912570262028308';
 // The message ID where reactions will be used
 const MESSAGE_ID = '1534554590022860870';
 
+// Shared member role granted alongside base roles on both messages
+const SHARED_MEMBER_ROLE_ID = '1533741150697951334';
+
 // ============================================
 // QUEUE SYSTEM
 // ============================================
@@ -222,6 +225,13 @@ client.on('messageReactionAdd', async (reaction, user) => {
             await member.roles.add(baseRole);
             console.log(`✅ Gave ${user.tag} the ${baseRole.name} role`);
         }
+
+        // Add the shared member role if not already present
+        const sharedRole = guild.roles.cache.get(SHARED_MEMBER_ROLE_ID);
+        if (sharedRole && !member.roles.cache.has(SHARED_MEMBER_ROLE_ID)) {
+            await member.roles.add(sharedRole);
+            console.log(`✅ Gave ${user.tag} the ${sharedRole.name} role`);
+        }
     } catch (error) {
         console.error(`Error managing roles for ${user.tag}:`, error);
     }
@@ -297,10 +307,27 @@ client.on('messageReactionRemove', async (reaction, user) => {
             }
         }
 
-        // If they have no other exclusive roles, remove the base role too
+         // If they have no other exclusive roles, remove the base role too
         if (!hasOtherExclusiveRole) {
             await member.roles.remove(baseRole);
             console.log(`✅ Removed ${baseRole.name} from ${user.tag} (no exclusive roles left)`);
+
+            // Remove the shared member role only if they have no non-tech roles either
+            let hasAnyNonTechExclusive = false;
+            for (const nonTechRoleId of nonTechExclusiveRoles) {
+                if (member.roles.cache.has(nonTechRoleId)) {
+                    hasAnyNonTechExclusive = true;
+                    break;
+                }
+            }
+
+            if (!hasAnyNonTechExclusive) {
+                const sharedRole = guild.roles.cache.get(SHARED_MEMBER_ROLE_ID);
+                if (sharedRole && member.roles.cache.has(SHARED_MEMBER_ROLE_ID)) {
+                    await member.roles.remove(sharedRole);
+                    console.log(`✅ Removed ${sharedRole.name} from ${user.tag} (no roles left)`);
+                }
+            }
         }
     } catch (error) {
         console.error(`Error removing role from ${user.tag}:`, error);
@@ -487,6 +514,13 @@ async function handleNonTechReactionAdd(reaction, user) {
             await member.roles.add(baseRole);
             console.log(`✅ Gave ${user.tag} the ${baseRole.name} role`);
         }
+
+        // Add the shared member role if not already present
+        const sharedRole = guild.roles.cache.get(SHARED_MEMBER_ROLE_ID);
+        if (sharedRole && !member.roles.cache.has(SHARED_MEMBER_ROLE_ID)) {
+            await member.roles.add(sharedRole);
+            console.log(`✅ Gave ${user.tag} the ${sharedRole.name} role`);
+        }
     } catch (error) {
         console.error(`Error managing non-tech roles for ${user.tag}:`, error);
     }
@@ -543,9 +577,27 @@ async function handleNonTechReactionRemove(reaction, user) {
         }
 
         // If no other exclusive roles, remove the base role too
+           // If they have no other exclusive roles, remove the base role too
         if (!hasOtherExclusiveRole) {
             await member.roles.remove(baseRole);
             console.log(`✅ Removed ${baseRole.name} from ${user.tag} (no exclusive roles left)`);
+
+            // Remove the shared member role only if they have no tech roles either
+            let hasAnyTechExclusive = false;
+            for (const techRoleId of exclusiveRoles) {
+                if (member.roles.cache.has(techRoleId)) {
+                    hasAnyTechExclusive = true;
+                    break;
+                }
+            }
+
+            if (!hasAnyTechExclusive) {
+                const sharedRole = guild.roles.cache.get(SHARED_MEMBER_ROLE_ID);
+                if (sharedRole && member.roles.cache.has(SHARED_MEMBER_ROLE_ID)) {
+                    await member.roles.remove(sharedRole);
+                    console.log(`✅ Removed ${sharedRole.name} from ${user.tag} (no roles left)`);
+                }
+            }
         }
     } catch (error) {
         console.error(`Error removing non-tech role from ${user.tag}:`, error);
